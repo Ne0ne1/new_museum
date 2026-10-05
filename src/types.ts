@@ -13,6 +13,7 @@ export interface Person {
   years: string
   photo: string
   photoPosition?: string
+  photoKind?: 'portrait' | 'book-page'
   photoSource?: { imageUrl: string; pageUrl: string; note: LocalizedText }
   parents: string[]
   spouses: string[]
@@ -20,7 +21,9 @@ export interface Person {
   shortBio: LocalizedText
   fullBio: LocalizedText
   keyDates: LifeEvent[]
-  sources: { title: LocalizedText; url?: string }[]
+  sources: { title: LocalizedText; url?: string; locator?: string }[]
+  evidenceNote?: LocalizedText
   generation: number
-  status: 'verified-minimal' | 'demo'
+  translationPending?: boolean
+  status: 'verified-minimal' | 'demo' | 'source-review'
 }

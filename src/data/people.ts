@@ -1,24 +1,13 @@
 import type { Person } from '../types'
-
-const review = {
-  ru: 'Демонстрационные данные — требуется подтверждение музеем. Биография, даты и родственные связи не утверждены.',
-  ce: 'Гайтаран яззам. Биографи, ханаш а, гергараллин зӀенаш а музейн тӀечӀагӀдаре эш.',
-}
-
-const demoPerson = (id: string, generation: number, ruName: string, ceName: string, ruRelation: string, ceRelation: string, children: string[] = [], parents: string[] = []): Person => ({
-  id, generation, name: { ru: ruName, ce: ceName }, relation: { ru: ruRelation, ce: ceRelation },
-  years: '—', photo: '/portraits/placeholder.png', parents, spouses: [], children,
-  shortBio: review, fullBio: review,
-  keyDates: [{ date: '—', title: { ru: 'Сведения уточняются', ce: 'Хаамаш билгалбовлу' }, description: review }],
-  sources: [{ title: { ru: 'Источник будет добавлен после проверки музеем', ce: 'Хьостан музейн таллам бича тӀетохар бу' } }], status: 'demo',
-})
+import { ancestors } from './ancestors'
+import { collateralFamily } from './collateralFamily'
+import { immediateFamily } from './immediateFamily'
 
 export const people: Person[] = [
-  demoPerson('ancestor-1', 0, 'Предок семьи I', 'Дезан дай I', 'Старшее поколение', 'Къена тӀаьхье', ['parent-1']),
-  demoPerson('ancestor-2', 0, 'Предок семьи II', 'Дезан дай II', 'Старшее поколение', 'Къена тӀаьхье', ['parent-1']),
-  demoPerson('parent-1', 1, 'Представитель старшего поколения', 'Къена тӀаьхьен векал', 'Родитель — демонстрация', 'Дай-нана — гайтаран', ['akhmat'], ['ancestor-1', 'ancestor-2']),
+  ...ancestors,
+  ...collateralFamily,
   {
-    id: 'akhmat', generation: 2,
+    id: 'akhmat', generation: 4,
     name: { ru: 'Ахмат-Хаджи Абдулхамидович Кадыров', ce: 'Къадири Ахьмад-Хьаьжа Абдулхамидан кӀант' },
     relation: { ru: 'Центральная фигура', ce: 'Коьрта сурт' }, years: '1951–2004',
     photo: '/portraits/akhmat-kadyrov.jpg', photoPosition: '50% 28%',
@@ -27,7 +16,7 @@ export const people: Person[] = [
       pageUrl: 'https://www.grozny-inform.ru/news/analitics/63573/',
       note: { ru: 'Временный материал прототипа. Право использования необходимо проверить перед публикацией.', ce: 'Гайтаран хӀоттаман ханалера материал. Араяккхале лело бакъо талла еза.' },
     },
-    parents: ['parent-1'], spouses: ['spouse-demo'], children: ['child-1', 'child-2', 'child-3'],
+    parents: ['abdulkhamid', 'dika'], spouses: ['aimani'], children: ['zargan', 'zulay', 'zelimkhan', 'child-1'],
     shortBio: { ru: 'Российский и чеченский государственный, политический и религиозный деятель. В 2000 году был назначен главой администрации Чеченской Республики, а в 2003 году избран её Президентом.', ce: 'Российн а, нохчийн а пачхьалкхан, политически а, динан а деятель. (Гайтаран гочдар — музейн тӀечӀагӀдаре эш.)' },
     fullBio: { ru: 'Российский и чеченский государственный, политический и религиозный деятель. В 2000 году был назначен главой администрации Чеченской Республики, а в 2003 году избран её Президентом. Его деятельность была связана с прекращением вооружённого противостояния и восстановлением республики.', ce: 'Российн а, нохчийн а пачхьалкхан, политически а, динан а деятель. 2000-чу шарахь Нохчийн Республикин администрацин куьйгалхо хӀоттийна, 2003-чу шарахь цуьнан Президент хаьржина. (Гайтаран гочдар — музейн тӀечӀагӀдаре эш.)' },
     keyDates: [
@@ -38,14 +27,14 @@ export const people: Person[] = [
       { date: '09.05.2004', title: { ru: 'Гибель', ce: 'Валар' }, description: { ru: 'Погиб в результате теракта на стадионе «Динамо» в Грозном.', ce: 'Соьлжа-ГӀалан «Динамо» стадион тӀехь терактан бахьанехь кхелхина. (Гайтаран гочдар.)' } },
     ],
     sources: [
+      { title: { ru: '«Родословная Ахмата-Хаджи Кадырова». Отчёт по восьми книгам', ce: '«Родословная Ахмата-Хаджи Кадырова». Отчёт по восьми книгам' }, locator: 'С. 2, 4, 8 и 9; дата рождения, семья и дети.' },
       { title: { ru: '«Грозный-информ»: биографическая справка', ce: '«Грозный-информ»: биографин хаам' }, url: 'https://www.grozny-inform.ru/news/review/76074/' },
       { title: { ru: 'Национальный музей ЧР: лекция о роли Ахмата-Хаджи', ce: 'Нохчийн Республикин къоман музей: лекци' }, url: 'https://chechenmuseum.ru/news/lektsiya-rol-ahmata-hadzhi-abdulhamidovicha-kadyrova-v-vosstanovlenii-g-groznogo' },
       { title: { ru: 'Национальный музей ЧР: музейный урок', ce: 'Нохчийн Республикин къоман музей: музейн урок' }, url: 'https://chechenmuseum.ru/news/muzejnyj-urok-put-ahmat-hadzhi-kadyrova-put-mira-i-sozidaniya' },
     ], status: 'verified-minimal',
   },
-  demoPerson('spouse-demo', 2, 'Супруга — демонстрация', 'Зуда — гайтаран', 'Супруга', 'Зуда'),
   {
-    id: 'child-1', generation: 3,
+    id: 'child-1', generation: 5,
     name: { ru: 'Рамзан Ахматович Кадыров', ce: 'Къадири Рамзан Ахьмадан кӀант' },
     relation: { ru: 'Сын Ахмата-Хаджи', ce: 'Ахьмад-Хьаьжин кӀант' }, years: '1976',
     photo: '/portraits/ramzan-kadyrov.jpg', photoPosition: '50% 18%',
@@ -54,17 +43,15 @@ export const people: Person[] = [
       pageUrl: 'https://tass.ru/encyclopedia/person/kadyrov-ramzan-ahmatovich',
       note: { ru: 'Временный материал прототипа. Право использования необходимо проверить перед публикацией.', ce: 'Гайтаран хӀоттаман ханалера материал. Араяккхале лело бакъо талла еза.' },
     },
-    parents: ['akhmat'], spouses: [], children: ['grandchild-1'],
+    parents: ['akhmat', 'aimani'], spouses: [], children: [],
     shortBio: { ru: 'Сын Ахмата-Хаджи Кадырова. Государственный и политический деятель, Глава Чеченской Республики.', ce: 'Ахьмад-Хьаьжа Къадировн кӀант. Пачхьалкхан а, политически а деятель, Нохчийн Республикин Мехкан Куьйгалхо. (Гайтаран гочдар.)' },
     fullBio: { ru: 'Сын Ахмата-Хаджи Кадырова. Государственный и политический деятель, Глава Чеченской Республики.', ce: 'Ахьмад-Хьаьжа Къадировн кӀант. Пачхьалкхан а, политически а деятель, Нохчийн Республикин Мехкан Куьйгалхо. (Гайтаран гочдар.)' },
     keyDates: [{ date: '05.10.1976', title: { ru: 'Рождение', ce: 'Вина' }, description: { ru: 'Родился в селе Центарой, ныне Ахмат-Юрт.', ce: 'Центорой эвлахь вина, хӀинца Ахьмад-Юрт. (Гайтаран гочдар.)' } }],
     sources: [
+      { title: { ru: '«Родословная Ахмата-Хаджи Кадырова». Отчёт по восьми книгам', ce: '«Родословная Ахмата-Хаджи Кадырова». Отчёт по восьми книгам' }, locator: 'С. 3, 4 и 9; сын, 1976 год рождения.' },
       { title: { ru: 'ФК «Ахмат»: Рамзан Ахматович Кадыров', ce: '«Ахьмат» ФК: Къадири Рамзан' }, url: 'https://www.fc-akhmat.ru/club/head/kadyrov-ramzan-akhmatovich/' },
       { title: { ru: 'Национальный музей ЧР: музейный урок', ce: 'Нохчийн Республикин къоман музей: музейн урок' }, url: 'https://chechenmuseum.ru/news/muzejnyj-urok-put-ahmat-hadzhi-kadyrova-put-mira-i-sozidaniya' },
     ], status: 'verified-minimal',
   },
-  demoPerson('child-2', 3, 'Потомок II', 'ТӀаьхье II', 'Ребёнок — демонстрация', 'Доьзалхо — гайтаран', [], ['akhmat']),
-  demoPerson('child-3', 3, 'Потомок III', 'ТӀаьхье III', 'Ребёнок — демонстрация', 'Доьзалхо — гайтаран', ['grandchild-2'], ['akhmat']),
-  demoPerson('grandchild-1', 4, 'Младшее поколение I', 'Кегий тӀаьхье I', 'Внук / внучка — демонстрация', 'Везар / йоӀ — гайтаран', [], ['child-1']),
-  demoPerson('grandchild-2', 4, 'Младшее поколение II', 'Кегий тӀаьхье II', 'Внук / внучка — демонстрация', 'Везар / йоӀ — гайтаран', [], ['child-3']),
+  ...immediateFamily,
 ]

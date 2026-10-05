@@ -1,28 +1,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Info, Languages, Maximize, X } from 'lucide-react'
 import { people } from './data/people'
+import { teip } from './data/teip'
 import type { Person } from './types'
 
 type Lang = 'ru' | 'ce'
 const copy = {
-  ru: { title: 'Семейное древо', subtitle: 'Ахмата-Хаджи Кадырова', verified: 'Минимальные проверенные сведения', demo: 'Демонстрационные данные — требуется подтверждение музеем', info: 'Нажмите на карточку, чтобы открыть биографию', bio: 'Биография', dates: 'Ключевые даты', sources: 'Источники', close: 'Закрыть', center: 'К центру', fullscreen: 'На весь экран', generation: 'Поколение' },
+  ru: { title: 'Семейное древо', subtitle: 'Ахмата-Хаджи Кадырова', verified: 'Проверено по источникам', demo: 'Требуется подтверждение музеем', info: 'Нажмите карточку • перемещайте дерево • масштабируйте жестом', bio: 'Биография', dates: 'Ключевые даты', sources: 'Источники', close: 'Закрыть', center: 'К центру', fullscreen: 'На весь экран', generation: 'Поколение' },
   ce: { title: 'Доьзалан дитт', subtitle: 'Къадири Ахьмад-Хьаьжин', verified: 'Лакхара хаамаш', demo: 'Музейн тӀечӀагӀдаре эш', info: 'Биографи схьайолла карточка тӀе таӀайе', bio: 'Биографи', dates: 'Коьрта ханаш', sources: 'Хьостанаш', close: 'ДӀакъовла', center: 'Юккъе', fullscreen: 'Экран дуьззина', generation: 'ТӀаьхье' },
 }
 
 const positions: Record<string, [number, number]> = {
-  'ancestor-1': [360, 8], 'ancestor-2': [800, 8], 'parent-1': [580, 198],
-  akhmat: [410, 388], 'spouse-demo': [750, 388], 'child-1': [100, 594],
-  'child-2': [520, 594], 'child-3': [940, 594], 'grandchild-1': [100, 800], 'grandchild-2': [940, 800],
+  ilyas: [840, 160], movsar: [840, 370],
+  zhabrail: [90, 580], abdulkhamid: [670, 580], dika: [990, 580],
+  'hozh-akhmed': [90, 820], hamid: [480, 820], akhmat: [850, 820], aimani: [1140, 820],
+  zargan: [370, 1060], zulay: [680, 1060], 'child-1': [1020, 1060], zelimkhan: [1350, 1060],
 }
 
-const TREE_WIDTH = 1380
-const TREE_HEIGHT = 972
-const MIN_SCALE = 0.48
+const TREE_WIDTH = 1900
+const TREE_HEIGHT = 1270
+const CARD_HEIGHT = 184
+const MIN_SCALE = 0.25
 const MAX_SCALE = 1.35
+
+function Portrait({ person, lang, modal = false }: { person: Person; lang: Lang; modal?: boolean }) {
+  if (person.photo.endsWith('/placeholder.png')) {
+    const initials = person.name[lang].split(/\s+/).slice(0, 2).map(part => part[0]).join('')
+    return <span className={`portrait-placeholder ${modal ? 'modal-portrait' : ''}`} aria-label="Фотография уточняется">
+      <b>{initials}</b><small>Фото уточняется</small>
+    </span>
+  }
+  if (person.photoKind === 'book-page') {
+    return <span
+      className={`document-portrait person-${person.id} ${modal ? 'modal-portrait' : ''}`}
+      role="img"
+      aria-label={person.name[lang]}
+      style={{ backgroundImage: `url(${person.photo})` }}
+    />
+  }
+  return <img src={person.photo} alt={person.name[lang]} draggable={false} style={{ objectPosition: person.photoPosition ?? '50% 50%' }}/>
+}
 
 function App() {
   const [lang, setLang] = useState<Lang>('ru')
   const [selected, setSelected] = useState<Person | null>(null)
+  const [showTeip, setShowTeip] = useState(false)
   const [scale, setScale] = useState(0.8)
   const [offset, setOffset] = useState({ x: 0, y: 18 })
   const viewportRef = useRef<HTMLElement | null>(null)
@@ -31,15 +53,26 @@ function App() {
   const pinch = useRef<{ distance: number; scale: number; centerX: number; centerY: number; offsetX: number; offsetY: number } | null>(null)
   const t = copy[lang]
 
-  const connections = useMemo(() => people.flatMap(person => person.children.map(child => [person.id, child] as const)), [])
+  const familyGroups = useMemo(() => [
+    { parents: ['abdulkhamid', 'dika'] as const, children: ['hamid', 'akhmat'] },
+    { parents: ['akhmat', 'aimani'] as const, children: ['zargan', 'zulay', 'child-1', 'zelimkhan'] },
+  ], [])
+  const groupedLinks = useMemo(() => new Set(familyGroups.flatMap(group => group.parents.flatMap(parent => group.children.map(child => `${parent}-${child}`)))), [familyGroups])
+  const reconstructedLinks = useMemo(() => new Set(['ilyas-movsar', 'movsar-abdulkhamid']), [])
+  const connections = useMemo(() => people.flatMap(person => person.children.map(child => [person.id, child] as const)).filter(([parent, child]) => !groupedLinks.has(`${parent}-${child}`)), [groupedLinks])
+  const cardWidth = (id: string) => id === 'akhmat' ? 240 : 220
+  const cardCenter = (id: string) => positions[id][0] + cardWidth(id) / 2
   const fitTree = useCallback(() => {
     const viewport = viewportRef.current
     if (!viewport) return
-    const fittedScale = Math.max(MIN_SCALE, Math.min(1, (viewport.clientWidth - 56) / TREE_WIDTH, (viewport.clientHeight - 72) / TREE_HEIGHT))
+    const portraitMode = viewport.clientHeight > viewport.clientWidth
+    const fittedScale = portraitMode
+      ? Math.max(0.52, Math.min(0.68, (viewport.clientHeight - 24) / TREE_HEIGHT))
+      : Math.max(MIN_SCALE, Math.min(0.72, (viewport.clientWidth - 40) / TREE_WIDTH, (viewport.clientHeight - 20) / TREE_HEIGHT))
     setScale(fittedScale)
     setOffset({
-      x: Math.max(28, (viewport.clientWidth - TREE_WIDTH * fittedScale) / 2),
-      y: Math.max(24, (viewport.clientHeight - TREE_HEIGHT * fittedScale) / 2),
+      x: portraitMode ? viewport.clientWidth / 2 - 950 * fittedScale : Math.max(28, (viewport.clientWidth - TREE_WIDTH * fittedScale) / 2),
+      y: portraitMode ? 18 : Math.max(24, (viewport.clientHeight - TREE_HEIGHT * fittedScale) / 2),
     })
   }, [])
   const keepTreeInReach = useCallback((next: { x: number; y: number }, nextScale: number) => {
@@ -91,7 +124,7 @@ function App() {
     setOffset(keepTreeInReach({ x: cursorX - (cursorX - offset.x) * ratio, y: cursorY - (cursorY - offset.y) * ratio }, nextScale))
   }
   useEffect(() => {
-    const close = (e: KeyboardEvent) => e.key === 'Escape' && setSelected(null)
+    const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSelected(null); setShowTeip(false) } }
     window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close)
   }, [])
   useEffect(() => {
@@ -102,7 +135,9 @@ function App() {
 
   return <main className="museum-shell">
     <header className="topbar">
-      <div className="brand-mark" aria-hidden="true">ЧГУ</div>
+      <div className="museum-logo" aria-label="Музей Чеченского государственного университета имени А. А. Кадырова">
+        <img src="/branding/museum-logo-source.jpg" alt="Музей ЧГУ имени А. А. Кадырова" />
+      </div>
       <div className="heading"><p>{t.title}</p><h1>{t.subtitle}</h1></div>
       <div className="header-actions">
         <button className="language" onClick={() => setLang(lang === 'ru' ? 'ce' : 'ru')} aria-label="Переключить язык"><Languages size={22}/><span>{lang === 'ru' ? 'РУС' : 'НОХ'}</span></button>
@@ -112,9 +147,25 @@ function App() {
 
     <section ref={viewportRef} className="tree-viewport" onWheel={wheelZoom} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
       <div className="tree-canvas" style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})` }}>
+        <button className="teip-card" onClick={() => setShowTeip(true)}>
+          <span>{teip.title}</span><small>Происхождение семьи</small>
+        </button>
         <svg className="connections" viewBox={`0 0 ${TREE_WIDTH} ${TREE_HEIGHT}`} aria-hidden="true">
-          {connections.map(([from, to]) => { const a = positions[from], b = positions[to]; const aWidth = from === 'akhmat' ? 240 : 220; const bWidth = to === 'akhmat' ? 240 : 220; return <path key={`${from}-${to}`} d={`M ${a[0]+aWidth/2} ${a[1]+148} C ${a[0]+aWidth/2} ${a[1]+170}, ${b[0]+bWidth/2} ${b[1]-24}, ${b[0]+bWidth/2} ${b[1]}`} /> })}
-          <path className="spouse-line" d="M 650 462 L 750 462" />
+          {connections.map(([from, to]) => { const a = positions[from], b = positions[to]; const aWidth = from === 'akhmat' ? 240 : 220; const bWidth = to === 'akhmat' ? 240 : 220; return <path className={reconstructedLinks.has(`${from}-${to}`) ? 'reconstructed-line' : ''} key={`${from}-${to}`} d={`M ${a[0]+aWidth/2} ${a[1]+CARD_HEIGHT} C ${a[0]+aWidth/2} ${a[1]+CARD_HEIGHT+22}, ${b[0]+bWidth/2} ${b[1]-22}, ${b[0]+bWidth/2} ${b[1]}`} /> })}
+          {familyGroups.map(group => {
+            const [first, second] = group.parents
+            const firstRight = positions[first][0] + cardWidth(first)
+            const secondLeft = positions[second][0]
+            const unionX = (firstRight + secondLeft) / 2
+            const spouseY = positions[first][1] + CARD_HEIGHT / 2
+            const busY = positions[group.children[0]][1] - 42
+            const childCenters = group.children.map(cardCenter)
+            return <g key={`${first}-${second}`} className="family-group">
+              <path className="spouse-line" d={`M ${firstRight} ${spouseY} H ${secondLeft}`} />
+              <path d={`M ${unionX} ${spouseY} V ${busY} M ${Math.min(...childCenters)} ${busY} H ${Math.max(...childCenters)}`} />
+              {group.children.map(child => <path key={child} d={`M ${cardCenter(child)} ${busY} V ${positions[child][1]}`} />)}
+            </g>
+          })}
         </svg>
         {people.map(person => {
           const [x, y] = positions[person.id]
@@ -126,9 +177,9 @@ function App() {
             onPointerUp={event => { event.stopPropagation(); setSelected(person) }}
             onClick={event => { if (event.detail === 0) setSelected(person) }}
           >
-            <img src={person.photo} alt="" draggable={false} style={{ objectPosition: person.photoPosition ?? '50% 50%' }}/>
+            <Portrait person={person} lang={lang} />
             <span className="person-copy"><strong>{person.name[lang]}</strong><small>{person.years}</small><em>{person.relation[lang]}</em></span>
-            <span className={`status ${person.status}`}>{person.status === 'demo' ? t.demo : t.verified}</span>
+            <span className={`status ${person.status}`}>{person.status === 'source-review' ? 'Требуется сверка с оригиналом' : person.status === 'demo' ? t.demo : t.verified}</span>
             <ChevronRight className="card-arrow" size={20}/>
           </button>
         })}
@@ -142,15 +193,23 @@ function App() {
         <button className="modal-close" onClick={() => setSelected(null)} aria-label={t.close}><X/></button>
         <aside className="portrait-panel">
           <button className="modal-back" onClick={() => setSelected(null)}><ChevronLeft/>{t.close}</button>
-          <img src={selected.photo} alt={selected.name[lang]} style={{ objectPosition: selected.photoPosition ?? '50% 50%' }}/>
-          <span className={`status ${selected.status}`}>{selected.status === 'demo' ? t.demo : t.verified}</span>
+          <Portrait person={selected} lang={lang} modal />
+          <span className={`status ${selected.status}`}>{selected.status === 'source-review' ? 'Требуется сверка с оригиналом' : selected.status === 'demo' ? t.demo : t.verified}</span>
         </aside>
         <div className="bio-content">
           <p className="eyebrow">{selected.relation[lang]}</p>
           <h2 id="bio-name">{selected.name[lang]}</h2><p className="years">{selected.years}</p>
           <p className="full-bio">{selected.fullBio[lang]}</p>
-          <section><h3>{t.dates}</h3><div className="timeline">{selected.keyDates.map((event, i) => <div className="event" key={i}><time>{event.date}</time><div><strong>{event.title[lang]}</strong><p>{event.description[lang]}</p></div></div>)}</div></section>
+          {lang === 'ce' && selected.translationPending && <p>Чеченский перевод готовится.</p>}
+          {selected.keyDates.length > 0 && <section><h3>{t.dates}</h3><div className="timeline">{selected.keyDates.map((event, i) => <div className="event" key={i}><time>{event.date}</time><div><strong>{event.title[lang]}</strong><p>{event.description[lang]}</p></div></div>)}</div></section>}
         </div>
+      </article>
+    </div>}
+    {showTeip && <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowTeip(false) }}>
+      <article className="teip-modal" role="dialog" aria-modal="true" aria-labelledby="teip-title">
+        <button className="modal-close" aria-label={t.close} onClick={() => setShowTeip(false)}><X/></button>
+        <h2 id="teip-title">{teip.title}</h2><p>{teip.description}</p>
+        {lang === 'ce' && <p>Чеченский перевод готовится.</p>}
       </article>
     </div>}
   </main>

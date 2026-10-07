@@ -13,7 +13,7 @@ const copy = {
 const positions: Record<string, [number, number]> = {
   ilyas: [840, 160], movsar: [840, 370],
   zhabrail: [90, 580], abdulkhamid: [670, 580], dika: [990, 580],
-  'hozh-akhmed': [90, 820], hamid: [480, 820], akhmat: [850, 820], aimani: [1140, 820],
+  'hozh-akhmed': [90, 820], magomed: [480, 820], akhmat: [850, 820], aimani: [1140, 820],
   zargan: [370, 1060], zulay: [680, 1060], 'child-1': [1020, 1060], zelimkhan: [1350, 1060],
 }
 
@@ -54,7 +54,7 @@ function App() {
   const t = copy[lang]
 
   const familyGroups = useMemo(() => [
-    { parents: ['abdulkhamid', 'dika'] as const, children: ['hamid', 'akhmat'] },
+    { parents: ['abdulkhamid', 'dika'] as const, children: ['magomed', 'akhmat'] },
     { parents: ['akhmat', 'aimani'] as const, children: ['zargan', 'zulay', 'child-1', 'zelimkhan'] },
   ], [])
   const groupedLinks = useMemo(() => new Set(familyGroups.flatMap(group => group.parents.flatMap(parent => group.children.map(child => `${parent}-${child}`)))), [familyGroups])

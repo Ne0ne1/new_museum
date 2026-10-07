@@ -72,7 +72,6 @@ button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .portrait-placeholder small { color: var(--muted); font-size: 7px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; text-align: center; }
 .document-portrait { display: block; background-repeat: no-repeat; background-color: #d7d0be; }
 .document-portrait.person-hozh-akhmed { background-size: 275% auto; background-position: 49% 28%; }
-.document-portrait.person-hamid { background-size: 330% auto; background-position: 50% 47%; }
 .person-copy { display: flex; flex-direction: column; min-width: 0; }
 .person-copy strong { font: 600 15px/1.3 "Literata", Georgia, serif; overflow-wrap: anywhere; }
 .central .person-copy strong { font-size: 17px; }
@@ -94,7 +93,6 @@ button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .portrait-panel .portrait-placeholder b { font-size: clamp(42px, 6vw, 80px); }
 .portrait-panel .portrait-placeholder small { font-size: 12px; }
 .portrait-panel .document-portrait.person-hozh-akhmed { background-size: 160% auto; background-position: 49% 25%; }
-.portrait-panel .document-portrait.person-hamid { background-size: 205% auto; background-position: 50% 48%; }
 .portrait-panel .status { flex: none; padding: 10px; border: 1px solid var(--divider); }
 .bio-content { padding: 64px 64px 48px; overflow-y: auto; scrollbar-color: var(--outline) var(--panel); }
 .eyebrow { margin: 0 0 12px; color: var(--brass); font-size: 12px; line-height: 1.45; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; }
